@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>XIN_PANEL_zZz — Gaming</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar"><a class="brand" href="#home"><span class="brand-icon">✥</span><span>XIN_PANEL_<b>zZz</b></span></a>
+<nav><button class="nav active" data-page="home">⌂ <span>Bosh sahifa</span></button><button class="nav" data-page="games">🎮 <span>O‘yinlar</span></button><button class="nav" data-page="scores">♛ <span>Reyting</span></button><button class="nav" data-page="profile">♙ <span>Profil</span></button><button class="nav" data-page="settings">⚙ <span>Sozlamalar</span></button></nav>
+<div class="side-bottom"><div class="crown">♛</div>O‘ynang, dam oling,<br> zavqlaning!<div class="mini-brand">XIN_PANEL_zZz</div></div></aside>
+<main class="main" id="home">
+<header class="topbar"><div class="mobile-brand">XIN_PANEL_zZz</div><div class="top-actions"><button id="themeBtn" title="Rangni almashtirish">☾</button><button class="user-btn" id="profileBtn"><span class="avatar">♙</span><span id="username">O‘yinchi</span>⌄</button></div></header>
+<section class="hero"><div class="hero-copy"><div class="hero-logo">XIN_PANEL_<span>zZz</span></div><p>O‘yinlar dunyosi — bu yerda!</p><div class="hero-line"></div><small>🎮 O‘yna. Raqobat qil. G‘alaba qozon.</small></div><div class="grim" aria-label="Sklet gamer">☠<span>♟</span></div><div class="hero-slogan">PLAY<br>RELAX<br><b>WIN</b></div></section>
+<section class="games-section" id="games"><div class="section-head"><h1>🎮 O‘yinlar</h1><span>3 ta o‘yin · bitta platforma</span></div><div class="game-grid">
+<article class="game-card chess-card"><div class="card-art chess-art"><div class="chess-preview" aria-hidden="true">♜ ♞ ♝ ♛<br>♟ ♟ ♟ ♟<br>♙ ♙ ♙ ♙<br>♖ ♘ ♗ ♔</div><span class="number">01</span></div><div class="card-content"><h2>♟ Chess</h2><p>Aql va strategiya o‘yini. Raqibingizni mag‘lub eting!</p><button class="play-btn" data-game="chess">▶ O‘ynash</button></div></article>
+<article class="game-card football-card"><div class="card-art football-art"><div class="stadium"><div class="pitch"><div class="center-circle"></div><div class="goal"></div><span class="player p1">●</span><span class="player p2">●</span><span class="ball">⚽</span></div></div><span class="number">02</span></div><div class="card-content"><h2>⚽ 2D Football</h2><p>Maydonda to‘pni boshqaring va gol uring!</p><button class="play-btn" data-game="football">▶ O‘ynash</button></div></article>
+<article class="game-card snake-card"><div class="card-art snake-art"><canvas id="snakePreview" width="340" height="190"></canvas><span class="number">03</span></div><div class="card-content"><h2>〰 Slither</h2><p>Yemlarni yig‘ing, iloningizni o‘stiring va to‘siqlardan qoching!</p><button class="play-btn" data-game="snake">▶ O‘ynash</button></div></article>
+</div></section>
+<section class="page-panel hidden" id="scores"><h1>♛ Reyting</h1><p class="muted">Bu qurilmadagi o‘yin natijalari.</p><div class="score-row"><span>🥇</span><b id="scoreName">O‘yinchi</b><span class="score-number" id="totalScore">0 ball</span></div><p class="muted">O‘yinlarda to‘plagan ballaringiz shu yerda ko‘rinadi.</p><button class="play-btn back-home">← Bosh sahifaga</button></section>
+<section class="page-panel hidden" id="profile"><h1>♙ Profil</h1><label for="nameInput">O‘yinchi nomi</label><div class="inline-form"><input id="nameInput" maxlength="20" placeholder="Ismingizni kiriting"><button class="play-btn" id="saveName">Saqlash</button></div><p class="muted">Ismingiz ushbu brauzerda saqlanadi.</p><button class="play-btn back-home">← Bosh sahifaga</button></section>
+<section class="page-panel hidden" id="settings"><h1>⚙ Sozlamalar</h1><p>Platforma: <b>XIN_PANEL_zZz</b></p><button class="play-btn" id="resetScores">Natijalarni tozalash</button><button class="play-btn back-home">← Bosh sahifaga</button></section>
+<footer><span>♛ XIN_PANEL_zZz</span><i></i><small>GAME · PLAY · ENJOY</small><i></i><span class="social">● ◈ ▶</span></footer>
+</main></div>
+<div class="game-overlay hidden" id="gameOverlay"><div class="game-window"><div class="game-top"><div><span class="eyebrow">XIN_PANEL_zZz ARCADE</span><h2 id="gameTitle">Chess</h2></div><button class="close-btn" id="closeGame">✕</button></div><div id="gameBody"></div></div></div>
+<div class="toast" id="toast"></div><script src="script.js"></script>
+</body></html>
