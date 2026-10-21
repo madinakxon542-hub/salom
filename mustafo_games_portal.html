@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MUSTAFO GAMES - Sci-Fi Neon Gaming Hub</title>
+  
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Three.js & Tone.js for 3D graphics & sound synth -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+          },
+          colors: {
+            neon: {
+              cyan: '#00f3ff',
+              blue: '#0066ff',
+              purple: '#8a2be2',
+              pink: '#ff007f',
+              dark: '#030712',
+              card: '#0b1120',
+            }
+          },
+          boxShadow: {
+            'neon-glow': '0 0 20px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2)',
+            'neon-blue': '0 0 20px rgba(0, 102, 255, 0.5)',
+            'neon-pink': '0 0 25px rgba(255, 0, 127, 0.4)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #030712;
+      color: #e2e8f0;
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+    
+    .neon-border {
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+    }
+    .neon-border:hover {
+      border-color: rgba(0, 243, 255, 0.8);
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
+    }
+    
+    .glass-panel {
+      background: rgba(11, 17, 32, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 243, 255, 0.2);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #030712;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #00f3ff;
+      border-radius: 4px;
+    }
+
+    /* Glow Text */
+    .glow-text {
+      text-shadow: 0 0 10px rgba(0, 243, 255, 0.7), 0 0 20px rgba(0, 243, 255, 0.4);
+    }
+
+    /* Tile Animations */
+    .tile-anim {
+      animation: pop 0.2s ease-in-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Chess.com Board Specifics */
+    .chess-sq-light { background-color: #eeeed2; }
+    .chess-sq-dark { background-color: #769656; }
+    .chess-sq-lastmove { background-color: #baca44 !important; }
+    .chess-sq-selected { background-color: #205422 !important; opacity: 0.85; }
+    .chess-sq-check { background-color: #e63946 !important; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 select-none custom-scrollbar">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="sticky top-0 z-50 glass-panel border-b border-cyan-500/20 px-4 lg:px-8 py-3 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('games')">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 font-black font-orbitron text-xl shadow-[0_0_15px_rgba(0,243,255,0.6)]">
+        M
+      </div>
+      <div>
+        <h1 class="font-orbitron font-extrabold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 glow-text">
+          MUSTAFO <span class="text-white">GAMES</span>
+        </h1>
+        <p class="text-[10px] tracking-widest text-cyan-400/80 uppercase font-semibold">Sci-Fi Gaming Hub v3.0</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="hidden md:flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-cyan-500/20">
+      <button onclick="switchTab('games')" id="nav-games" class="tab-btn active px-4 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+        <i data-lucide="gamepad-2" class="w-4 h-4"></i> O'yinlar
+      </button>
+      <button onclick="switchTab('leaderboard')" id="nav-leaderboard" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800">
+        <i data-lucide="trophy" class="w-4 h-4"></i> Reyting
+      </button>
+      <button onclick="switchTab('profile')" id="nav-profile" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800">
+        <i data-lucide="user" class="w-4 h-4"></i> Profil
+      </button>
+    </nav>
+
+    <!-- Global Sound & Audio Control -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 bg-slate-900/90 border border-cyan-500/30 px-2.5 py-1.5 rounded-xl">
+        <button id="audio-toggle-btn" onclick="toggleMute()" class="text-cyan-400 hover:text-cyan-300 transition">
+          <i id="audio-icon" data-lucide="volume-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+        </button>
+        <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="updateVolume(this.value)" class="w-12 sm:w-20 accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+      </div>
+
+      <!-- Quick Profile Pill -->
+      <div onclick="switchTab('profile')" class="flex items-center gap-2 bg-gradient-to-r from-cyan-950 to-slate-900 border border-cyan-500/30 hover:border-cyan-400 px-3 py-1.5 rounded-xl cursor-pointer transition">
+        <div id="top-avatar" class="w-7 h-7 rounded-lg bg-cyan-500 text-slate-950 font-bold flex items-center justify-center text-xs">
+          ⚡
+        </div>
+        <div class="hidden sm:block text-left">
+          <div id="top-username" class="text-xs font-bold text-slate-200 leading-none">Mustafo</div>
+          <div id="top-level" class="text-[10px] text-cyan-400 font-mono leading-none mt-1">LVL 5 Cyber Knight</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col">
+
+    <!-- GAME CANVAS / PLAY AREA Container -->
+    <section id="game-viewport-container" class="hidden flex-col mb-8 bg-slate-900/90 border border-cyan-500/40 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(0,243,255,0.15)]">
+      <!-- Active Game Header Bar -->
+      <div class="bg-slate-950 px-4 py-3 border-b border-cyan-500/30 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button onclick="closeCurrentGame()" class="p-1.5 bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-400 rounded-lg transition border border-slate-700 hover:border-cyan-500/50">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </button>
+          <h2 id="active-game-title" class="font-orbitron font-bold text-cyan-400 text-base sm:text-lg tracking-wide flex items-center gap-2">
+            Game Title
+          </h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleFullscreen()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">
+            <i data-lucide="maximize" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeCurrentGame()" class="p-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 rounded-lg transition border border-rose-800/50">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Game Dynamic Render Viewport -->
+      <div id="game-render-area" class="relative w-full min-h-[520px] bg-slate-950 flex items-center justify-center overflow-hidden p-2">
+      </div>
+    </section>
+
+    <!-- ================= TAB 1: GAMES GRID ================= -->
+    <section id="tab-games" class="space-y-6">
+      <!-- Banner / Feature Hero -->
+      <div class="relative rounded-3xl p-6 md:p-10 overflow-hidden bg-gradient-to-r from-cyan-950 via-slate-900 to-purple-950 border border-cyan-500/30 shadow-[0_0_40px_rgba(0,243,255,0.1)] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="z-10 max-w-xl space-y-3">
+          <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            🔥 MUSTAFO GAMES PORTAL
+          </span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold font-orbitron text-white leading-tight">
+            NIGHT NEON <span class="text-cyan-400 glow-text">ARCADE PLATFORM</span>
+          </h2>
+          <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+            Chess.com uslubidagi ultra-aniq Shaxmat, Bilyard, Free Fire (Battle Royale), Minecraft (Cube Craft), Horror Labirint, 2048, Snake hamda Tic-Tac-Toe (X-O) o'yinlarining barchasi bitta portalda!
+          </p>
+        </div>
+        <div class="z-10 flex gap-4">
+          <button onclick="launchGame('chess')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-orbitron font-extrabold text-xs sm:text-sm tracking-wider shadow-[0_0_20px_rgba(0,243,255,0.5)] transition hover:scale-105 flex items-center gap-2">
+            <i data-lucide="crown" class="w-5 h-5"></i> CHESS.COM SHAXMATNI O'YNASH
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-orbitron font-bold text-lg sm:text-xl text-slate-200 flex items-center gap-2">
+          <i data-lucide="layout-grid" class="w-5 h-5 text-cyan-400"></i> Barcha O'yinlar (8)
+        </h3>
+        <span class="text-xs text-cyan-400 font-mono">100% Playable</span>
+      </div>
+
+      <!-- Game Cards Grid (8 Games) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        <!-- 1. Mustafo Chess (Chess.com Replica) -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-emerald-950 to-slate-900 border border-emerald-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="crown" class="w-14 h-14 text-emerald-400/80 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">CHESS.COM REPLICA</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Mustafo Chess</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Haqiqiy Chess.com taxtasi va vektori, notation hamda Smart AI bilan shaxmat.</p>
+          </div>
+          <button onclick="launchGame('chess')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 2. Battle Survival -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-rose-950 to-slate-900 border border-rose-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="crosshair" class="w-14 h-14 text-rose-500/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">FREE FIRE STYLE</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Battle Survival</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Plazma va lazer qurollari bilan botlarga qarshi jang qiling va omon qoling.</p>
+          </div>
+          <button onclick="launchGame('battle-survival')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 3. Cube Craft -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-teal-950 to-slate-900 border border-teal-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="box" class="w-14 h-14 text-teal-400/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">MINECRAFT STYLE</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Cube Craft</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Bloklar bilan binolar va inshootlar barpo eting hamda kovlang.</p>
+          </div>
+          <button onclick="launchGame('cube-craft')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 4. Pool Billiards -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="circle-dot" class="w-14 h-14 text-cyan-400/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">8-BALL POOL</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Pool Billiards</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Realistik fizika va kiy (tayoq) zarbasi bilan bilyard sharlarini tushiring.</p>
+          </div>
+          <button onclick="launchGame('billiards')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 5. Nightmare Maze -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-purple-950 to-slate-900 border border-purple-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="ghost" class="w-14 h-14 text-purple-400/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">HORROR</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Nightmare Maze</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Qorong'u labirint va fonar chirog'i. Arvohdan qochib 5 ta kalitni toping.</p>
+          </div>
+          <button onclick="launchGame('nightmare-maze')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 6. Neon 2048 -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-blue-950 to-slate-900 border border-blue-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="grid" class="w-14 h-14 text-blue-400/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">PUZZLE</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Neon 2048</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Klaviatura yoki svayp orqali bloklarni birlashtirib 2048 ga erishing.</p>
+          </div>
+          <button onclick="launchGame('2048')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 7. Snake 3310 -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="orbit" class="w-14 h-14 text-indigo-400/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">RETRO NOKIA</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Snake 3310</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Afsonaviy ilon o'yini neon glowing visual va silliq harakatlar bilan.</p>
+          </div>
+          <button onclick="launchGame('snake')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+        <!-- 8. Tic-Tac-Toe Neon -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-400/80 transition-all duration-300 group hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,243,255,0.25)]">
+          <div>
+            <div class="relative h-36 rounded-xl bg-gradient-to-br from-fuchsia-950 to-slate-900 border border-fuchsia-500/30 overflow-hidden flex items-center justify-center mb-3">
+              <i data-lucide="x" class="w-14 h-14 text-fuchsia-400/70 group-hover:scale-110 transition duration-300"></i>
+              <span class="absolute top-2 right-2 bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 text-[10px] font-bold px-2 py-0.5 rounded-md">X-O NEON</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-base text-white group-hover:text-cyan-400 transition">Tic-Tac-Toe Neon</h4>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Neon X va O mantiqiy o'yini. Cyber AI yoki 2 kishilik do'stlik rejimi!</p>
+          </div>
+          <button onclick="launchGame('tictactoe')" class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold font-orbitron text-xs transition flex items-center justify-center gap-2 border border-slate-700 hover:border-cyan-400">
+            <i data-lucide="play" class="w-4 h-4"></i> O'YNASH
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= TAB 2: GLOBAL LEADERBOARD ================= -->
+    <section id="tab-leaderboard" class="hidden space-y-6">
+      <div class="glass-panel rounded-3xl p-6 md:p-8 border border-cyan-500/30">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+          <div>
+            <h2 class="font-orbitron font-extrabold text-2xl text-white flex items-center gap-3">
+              <i data-lucide="trophy" class="w-7 h-7 text-yellow-400"></i> GLOBAL REYTING JADVALI
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Eng yuqori natijalarga erishgan kiber o'yinchilar</p>
+          </div>
+        </div>
+
+        <div class="mt-6 overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-cyan-400 font-orbitron text-xs tracking-wider uppercase">
+                <th class="p-3">O'rin</th>
+                <th class="p-3">O'yinchi</th>
+                <th class="p-3">O'yin</th>
+                <th class="p-3">Ochko / Skor</th>
+                <th class="p-3 text-right">Daraja</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body" class="divide-y divide-slate-800/60 font-medium text-sm">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: PLAYER PROFILE ================= -->
+    <section id="tab-profile" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Profile Card -->
+        <div class="glass-panel rounded-3xl p-6 border border-cyan-500/30 flex flex-col items-center text-center space-y-4">
+          <div class="relative">
+            <div id="profile-avatar-display" class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-cyan-500 to-purple-600 text-slate-950 font-black text-4xl flex items-center justify-center shadow-[0_0_25px_rgba(0,243,255,0.4)]">
+              ⚡
+            </div>
+            <button onclick="cycleAvatar()" class="absolute -bottom-2 -right-2 p-2 bg-slate-900 border border-cyan-500 text-cyan-400 rounded-xl hover:bg-cyan-500 hover:text-slate-950 transition">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div>
+            <h3 id="profile-name-display" class="font-orbitron font-bold text-xl text-white">Mustafo</h3>
+            <p id="profile-title-display" class="text-xs text-cyan-400 font-mono mt-0.5">LVL 5 Cyber Knight</p>
+          </div>
+
+          <!-- Edit Profile Form -->
+          <div class="w-full pt-4 border-t border-slate-800 space-y-3 text-left">
+            <label class="text-xs text-slate-400 font-semibold">Taxallusni o'zgartirish:</label>
+            <div class="flex gap-2">
+              <input type="text" id="username-input" value="Mustafo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 outline-none focus:border-cyan-400">
+              <button onclick="saveProfileName()" class="px-4 py-2 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs hover:bg-cyan-400 transition">Saqlash</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat Overview -->
+        <div class="md:col-span-2 glass-panel rounded-3xl p-6 border border-cyan-500/30 space-y-6">
+          <h3 class="font-orbitron font-bold text-xl text-white flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-5 h-5 text-cyan-400"></i> STATISTIKA
+          </h3>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <span class="text-xs text-slate-400">Jami o'yinlar</span>
+              <div class="text-2xl font-orbitron font-bold text-cyan-400 mt-1">62</div>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <span class="text-xs text-slate-400">Chess.com Wins</span>
+              <div class="text-2xl font-orbitron font-bold text-emerald-400 mt-1">24</div>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <span class="text-xs text-slate-400">Tic-Tac-Toe Wins</span>
+              <div class="text-2xl font-orbitron font-bold text-fuchsia-400 mt-1">16</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <p class="font-orbitron font-bold text-slate-400">MUSTAFO GAMES &copy; 2026</p>
+        <p class="text-[10px] text-slate-600 mt-0.5">8 In 1 Sci-Fi Dark Neon Gaming Platform</p>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span class="hover:text-cyan-400 cursor-pointer">Maxfiylik</span>
+        <span class="hover:text-cyan-400 cursor-pointer">Qoidalar</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= LOGIC & GAME ENGINES ================= -->
+  <script>
+    // Initialize Icons
+    lucide.createIcons();
+
+    /* ================= AUDIO SYSTEM ================= */
+    let globalVolume = 0.8;
+    let isMuted = false;
+    let synth = null;
+
+    function initAudio() {
+      if (!synth && window.Tone) {
+        synth = new Tone.Synth().toDestination();
+        Tone.Destination.volume.value = Tone.gainToDb(globalVolume);
+      }
+    }
+
+    function playSound(type) {
+      if (isMuted) return;
+      try {
+        initAudio();
+        if (type === 'click') synth.triggerAttackRelease("C5", "8n");
+        else if (type === 'move') synth.triggerAttackRelease("E4", "16n");
+        else if (type === 'capture') synth.triggerAttackRelease("G3", "16n");
+        else if (type === 'check') synth.triggerAttackRelease("C6", "8n");
+        else if (type === 'win') synth.triggerAttackRelease("E6", "4n");
+        else if (type === 'gameover') synth.triggerAttackRelease("A2", "4n");
+      } catch (e) {}
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const icon = document.getElementById('audio-icon');
+      if (isMuted) {
+        icon.setAttribute('data-lucide', 'volume-x');
+        if (window.Tone) Tone.Destination.mute = true;
+      } else {
+        icon.setAttribute('data-lucide', 'volume-2');
+        if (window.Tone) Tone.Destination.mute = false;
+      }
+      lucide.createIcons();
+    }
+
+    function updateVolume(val) {
+      globalVolume = val / 100;
+      if (window.Tone) Tone.Destination.volume.value = Tone.gainToDb(globalVolume);
+    }
+
+    /* ================= TAB SWITCHING ================= */
+    function switchTab(tabName) {
+      playSound('click');
+      document.querySelectorAll('section[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-cyan-500/20', 'text-cyan-400', 'border', 'border-cyan-500/40');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeTab = document.getElementById(`tab-${tabName}`);
+      if (activeTab) activeTab.classList.remove('hidden');
+
+      const activeNav = document.getElementById(`nav-${tabName}`);
+      if (activeNav) {
+        activeNav.classList.add('bg-cyan-500/20', 'text-cyan-400', 'border', 'border-cyan-500/40');
+        activeNav.classList.remove('text-slate-400');
+      }
+
+      if (tabName === 'leaderboard') renderLeaderboard();
+    }
+
+    /* ================= PROFILE SYSTEM ================= */
+    const avatarList = ['⚡', '🤖', '👾', '🚀', '🔥', '⚔️'];
+    let currentAvatarIdx = 0;
+
+    function cycleAvatar() {
+      playSound('click');
+      currentAvatarIdx = (currentAvatarIdx + 1) % avatarList.length;
+      const newAvatar = avatarList[currentAvatarIdx];
+      document.getElementById('profile-avatar-display').innerText = newAvatar;
+      document.getElementById('top-avatar').innerText = newAvatar;
+    }
+
+    function saveProfileName() {
+      playSound('click');
+      const newName = document.getElementById('username-input').value.trim() || 'Mustafo';
+      document.getElementById('profile-name-display').innerText = newName;
+      document.getElementById('top-username').innerText = newName;
+    }
+
+    /* ================= LEADERBOARD DATA ================= */
+    const mockLeaderboard = [
+      { rank: 1, name: 'Grandmaster_X', game: 'Mustafo Chess', score: '2,450 Elo', level: 'LVL 15' },
+      { rank: 2, name: 'CyberKing', game: 'Battle Survival', score: '4,850', level: 'LVL 12' },
+      { rank: 3, name: 'Mustafo', game: 'Mustafo Chess', score: '1,890 Elo', level: 'LVL 5' },
+      { rank: 4, name: 'X_Master', game: 'Tic-Tac-Toe', score: '22 Wins', level: 'LVL 9' },
+      { rank: 5, name: 'NeonPulse', game: 'Snake 3310', score: '380', level: 'LVL 8' }
+    ];
+
+    function renderLeaderboard() {
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '';
+      mockLeaderboard.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-cyan-500/5 transition";
+        tr.innerHTML = `
+          <td class="p-3 font-orbitron font-bold text-cyan-400">#${item.rank}</td>
+          <td class="p-3 font-semibold text-slate-200">${item.name}</td>
+          <td class="p-3 text-slate-400 text-xs">${item.game}</td>
+          <td class="p-3 font-mono font-bold text-emerald-400">${item.score}</td>
+          <td class="p-3 text-right font-mono text-xs text-purple-400">${item.level}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ================= GAME LAUNCHER SYSTEM ================= */
+    let currentActiveGame = null;
+
+    function launchGame(gameKey) {
+      playSound('click');
+      const container = document.getElementById('game-viewport-container');
+      const renderArea = document.getElementById('game-render-area');
+      const gameTitle = document.getElementById('active-game-title');
+
+      container.classList.remove('hidden');
+      renderArea.innerHTML = ''; 
+      container.scrollIntoView({ behavior: 'smooth' });
+
+      currentActiveGame = gameKey;
+
+      switch(gameKey) {
+        case 'chess':
+          gameTitle.innerHTML = `<i data-lucide="crown" class="w-5 h-5 text-emerald-400"></i> Mustafo Chess (Chess.com Style)`;
+          initChessComReplica(renderArea);
+          break;
+        case 'tictactoe':
+          gameTitle.innerHTML = `<i data-lucide="x" class="w-5 h-5 text-fuchsia-400"></i> Tic-Tac-Toe Neon (X vs O)`;
+          initTicTacToe(renderArea);
+          break;
+        case 'battle-survival':
+          gameTitle.innerHTML = `<i data-lucide="crosshair" class="w-5 h-5 text-rose-500"></i> Battle Survival`;
+          initBattleSurvival(renderArea);
+          break;
+        case '2048':
+          gameTitle.innerHTML = `<i data-lucide="grid" class="w-5 h-5 text-cyan-400"></i> Neon 2048`;
+          initNeon2048(renderArea);
+          break;
+        case 'snake':
+          gameTitle.innerHTML = `<i data-lucide="orbit" class="w-5 h-5 text-indigo-400"></i> Snake 3310 Neon`;
+          initSnake3310(renderArea);
+          break;
+        case 'cube-craft':
+          gameTitle.innerHTML = `<i data-lucide="box" class="w-5 h-5 text-teal-400"></i> Cube Craft Sandbox`;
+          initCubeCraft(renderArea);
+          break;
+        case 'billiards':
+          gameTitle.innerHTML = `<i data-lucide="circle-dot" class="w-5 h-5 text-cyan-400"></i> Pool Billiards 8-Ball`;
+          initBilliards(renderArea);
+          break;
+        case 'nightmare-maze':
+          gameTitle.innerHTML = `<i data-lucide="ghost" class="w-5 h-5 text-purple-400"></i> Nightmare Maze`;
+          initNightmareMaze(renderArea);
+          break;
+      }
+
+      lucide.createIcons();
+    }
+
+    function closeCurrentGame() {
+      playSound('click');
+      document.getElementById('game-viewport-container').classList.add('hidden');
+      document.getElementById('game-render-area').innerHTML = '';
+      currentActiveGame = null;
+    }
+
+    function toggleFullscreen() {
+      const elem = document.getElementById('game-render-area');
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {});
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    /* =========================================================================
+       1. ULTRA-AUTHENTIC CHESS.COM REPLICA ENGINE
+       ========================================================================= */
+    const CHESS_PIECES_SVG = {
+      'wP': `<svg viewBox="0 0 45 45"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      'wR': `<svg viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12 36h21l-1.5-4h-18l-1.5 4zM11 14h23l-2 18H13l-2-18zM9 10h5v3H9v-3zM16 10h5v3h-5v-3zM24 10h5v3h-5v-3zM31 10h5v3h-5v-3z"/><path d="M11 14V10M34 14V10M16 14V10M21 14V10M26 14V10M31 14V10"/></g></svg>`,
+      'wN': `<svg viewBox="0 0 45 45"><path d="M22 10c-1.08 0-2.09.43-2.83 1.17s-1.17 1.75-1.17 2.83c0 1.25.57 2.36 1.47 3.08-3.09 1.15-5.47 3.88-5.47 7.42 0 .83.15 1.63.43 2.36C12.33 27.88 11 30.29 11 33c0 3.31 2.69 6 6 6h16c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h2c.55 0 1-.45 1-1v-3c0-3.87-2.13-7.24-5.35-9.03.23-.62.35-1.29.35-1.97 0-3.31-2.69-6-6-6z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      'wB': `<svg viewBox="0 0 45 45"><g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="#fff"><path d="M9 36c1.24-2.59 6.01-4 13.5-4 7.49 0 12.26 1.41 13.5 4H9z"/><path d="M15 32c2.5-3 2.5-12 7.5-16 5 4 5 13 7.5 16H15z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></g><path d="M17.5 26h10M22.5 21v10"/></g></svg>`,
+      'wQ': `<svg viewBox="0 0 45 45"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 36h29v-3H8v3zM9 33h27L33 17H12L9 33zM11 17l-3-8 7.5 4L22.5 7l7 6.5L37 9l-3 8H11z"/><circle cx="6" cy="9" r="2"/><circle cx="15.5" cy="13" r="2"/><circle cx="22.5" cy="7" r="2"/><circle cx="29.5" cy="13" r="2"/><circle cx="39" cy="9" r="2"/></g></svg>`,
+      'wK': `<svg viewBox="0 0 45 45"><g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke="#000"/><path d="M22.5 25c-4 0-7.5 1.5-7.5 6h15c0-4.5-3.5-6-7.5-6z" fill="#fff"/><path d="M11.5 37c2.25-2 6.75-3.5 11-3.5s8.75 1.5 11 3.5H11.5z" fill="#fff"/><path d="M12.5 30c1.25-1.5 4.75-2.5 10-2.5s8.75 1 10 2.5H12.5z" fill="#fff"/><circle cx="22.5" cy="18" r="5.5" fill="#fff"/></g></svg>`,
+      'bP': `<svg viewBox="0 0 45 45"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#1e293b" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      'bR': `<svg viewBox="0 0 45 45"><g fill="#1e293b" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12 36h21l-1.5-4h-18l-1.5 4zM11 14h23l-2 18H13l-2-18zM9 10h5v3H9v-3zM16 10h5v3h-5v-3zM24 10h5v3h-5v-3zM31 10h5v3h-5v-3z"/><path d="M11 14V10M34 14V10M16 14V10M21 14V10M26 14V10M31 14V10"/></g></svg>`,
+      'bN': `<svg viewBox="0 0 45 45"><path d="M22 10c-1.08 0-2.09.43-2.83 1.17s-1.17 1.75-1.17 2.83c0 1.25.57 2.36 1.47 3.08-3.09 1.15-5.47 3.88-5.47 7.42 0 .83.15 1.63.43 2.36C12.33 27.88 11 30.29 11 33c0 3.31 2.69 6 6 6h16c.55 0 1-.45 1-1v-2c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h2c.55 0 1-.45 1-1v-3c0-3.87-2.13-7.24-5.35-9.03.23-.62.35-1.29.35-1.97 0-3.31-2.69-6-6-6z" fill="#1e293b" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      'bB': `<svg viewBox="0 0 45 45"><g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="#1e293b"><path d="M9 36c1.24-2.59 6.01-4 13.5-4 7.49 0 12.26 1.41 13.5 4H9z"/><path d="M15 32c2.5-3 2.5-12 7.5-16 5 4 5 13 7.5 16H15z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></g><path d="M17.5 26h10M22.5 21v10" stroke="#fff"/></g></svg>`,
+      'bQ': `<svg viewBox="0 0 45 45"><g fill="#1e293b" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 36h29v-3H8v3zM9 33h27L33 17H12L9 33zM11 17l-3-8 7.5 4L22.5 7l7 6.5L37 9l-3 8H11z"/><circle cx="6" cy="9" r="2"/><circle cx="15.5" cy="13" r="2"/><circle cx="22.5" cy="7" r="2"/><circle cx="29.5" cy="13" r="2"/><circle cx="39" cy="9" r="2"/></g></svg>`,
+      'bK': `<svg viewBox="0 0 45 45"><g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke="#fff"/><path d="M22.5 25c-4 0-7.5 1.5-7.5 6h15c0-4.5-3.5-6-7.5-6z" fill="#1e293b"/><path d="M11.5 37c2.25-2 6.75-3.5 11-3.5s8.75 1.5 11 3.5H11.5z" fill="#1e293b"/><path d="M12.5 30c1.25-1.5 4.75-2.5 10-2.5s8.75 1 10 2.5H12.5z" fill="#1e293b"/><circle cx="22.5" cy="18" r="5.5" fill="#1e293b"/></g></svg>`
+    };
+
+    function initChessComReplica(container) {
+      container.innerHTML = `
+        <div class="flex flex-col lg:flex-row items-center justify-center gap-6 p-2 w-full max-w-5xl mx-auto">
+          
+          <!-- Board Column -->
+          <div class="flex flex-col items-center">
+            <!-- Opponent Profile Header -->
+            <div class="w-full max-w-[420px] flex items-center justify-between bg-slate-900/90 px-3 py-2 rounded-t-xl border border-slate-800 text-xs font-mono mb-1">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-rose-950 border border-rose-500/50 flex items-center justify-center text-rose-400 font-bold">🤖</div>
+                <div>
+                  <div id="chess-op-name" class="font-bold text-slate-200 leading-none">Cyber Engine</div>
+                  <div class="text-[10px] text-slate-500 leading-none mt-1">Rating: 1850</div>
+                </div>
+              </div>
+              <div id="chess-op-captured" class="flex items-center gap-1 text-slate-400 font-bold"></div>
+            </div>
+
+            <!-- 8x8 Chess.com Grid Board -->
+            <div class="relative">
+              <div id="chess-board" class="grid grid-cols-8 grid-rows-8 w-[340px] h-[340px] sm:w-[420px] sm:h-[420px] border-4 border-slate-800 shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-lg overflow-hidden select-none">
+              </div>
+
+              <!-- Pawn Promotion Modal -->
+              <div id="chess-promo-modal" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md z-30 flex items-center justify-center">
+                <div class="bg-slate-900 border border-cyan-500/50 p-4 rounded-2xl flex gap-3 shadow-2xl">
+                  <button onclick="promotePawn('Q')" class="w-12 h-12 bg-slate-800 hover:bg-cyan-500/20 rounded-xl p-1">${CHESS_PIECES_SVG['wQ']}</button>
+                  <button onclick="promotePawn('R')" class="w-12 h-12 bg-slate-800 hover:bg-cyan-500/20 rounded-xl p-1">${CHESS_PIECES_SVG['wR']}</button>
+                  <button onclick="promotePawn('B')" class="w-12 h-12 bg-slate-800 hover:bg-cyan-500/20 rounded-xl p-1">${CHESS_PIECES_SVG['wB']}</button>
+                  <button onclick="promotePawn('N')" class="w-12 h-12 bg-slate-800 hover:bg-cyan-500/20 rounded-xl p-1">${CHESS_PIECES_SVG['wN']}</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Player Profile Footer -->
+            <div class="w-full max-w-[420px] flex items-center justify-between bg-slate-900/90 px-3 py-2 rounded-b-xl border border-slate-800 text-xs font-mono mt-1">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-cyan-950 border border-cyan-500/50 flex items-center justify-center text-cyan-400 font-bold">⚡</div>
+                <div>
+                  <div class="font-bold text-slate-200 leading-none">Mustafo</div>
+                  <div class="text-[10px] text-cyan-400 leading-none mt-1">Rating: 1920</div>
+                </div>
+              </div>
+              <div id="chess-player-captured" class="flex items-center gap-1 text-slate-400 font-bold"></div>
+            </div>
+          </div>
+
+          <!-- Sidebar Controls & Notation Log -->
+          <div class="w-full lg:w-80 glass-panel rounded-2xl p-4 flex flex-col h-[460px] justify-between border border-cyan-500/30">
+            <div>
+              <h3 class="font-orbitron font-bold text-base text-cyan-400 mb-3 flex items-center justify-between">
+                <span>Chess.com Hub</span>
+                <span id="chess-status-pill" class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">WHITE TURN</span>
+              </h3>
+
+              <!-- Controls -->
+              <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="setChessMode('ai')" id="btn-chess-ai" class="py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 rounded-xl text-xs font-bold font-orbitron">VS AI</button>
+                <button onclick="setChessMode('pvp')" id="btn-chess-pvp" class="py-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl text-xs font-bold font-orbitron">2 Player</button>
+              </div>
+
+              <!-- Move Notation Log -->
+              <div class="bg-slate-950 rounded-xl border border-slate-800 p-2 h-48 overflow-y-auto custom-scrollbar font-mono text-xs">
+                <div class="text-[10px] text-slate-500 mb-1 border-b border-slate-800 pb-1 flex justify-between">
+                  <span>#</span><span>White</span><span>Black</span>
+                </div>
+                <div id="chess-notation-log" class="space-y-1 text-slate-300">
+                  <div class="text-slate-600 text-center py-4">O'yin hali boshlanmadi</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+              <button onclick="resetChessGame()" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-orbitron font-extrabold text-xs rounded-xl shadow-[0_0_15px_rgba(0,243,255,0.4)] transition">
+                🔄 YANGI SHAXMAT O'YINI
+              </button>
+            </div>
+          </div>
+
+        </div>
+      `;
+
+      // Board Initial Setup Matrix
+      let boardState = [
+        ['bR','bN','bB','bQ','bK','bB','bN','bR'],
+        ['bP','bP','bP','bP','bP','bP','bP','bP'],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['wP','wP','wP','wP','wP','wP','wP','wP'],
+        ['wR','wN','wB','wQ','wK','wB','wN','wR']
+      ];
+
+      let turn = 'w'; // 'w' or 'b'
+      let selectedSquare = null;
+      let legalMoves = [];
+      let lastMove = null;
+      let gameMode = 'ai';
+      let pendingPromotion = null;
+      let moveHistory = [];
+
+      window.setChessMode = function(m) {
+        gameMode = m;
+        document.getElementById('btn-chess-ai').className = m === 'ai' ? "py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 rounded-xl text-xs font-bold font-orbitron" : "py-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl text-xs font-bold font-orbitron";
+        document.getElementById('btn-chess-pvp').className = m === 'pvp' ? "py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 rounded-xl text-xs font-bold font-orbitron" : "py-2 bg-slate-800 text-slate-400 border border-slate-700 rounded-xl text-xs font-bold font-orbitron";
+        resetChessGame();
+      };
+
+      function renderBoard() {
+        const boardEl = document.getElementById('chess-board');
+        if (!boardEl) return;
+        boardEl.innerHTML = '';
+
+        const files = ['a','b','c','d','e','f','g','h'];
+        const ranks = ['8','7','6','5','4','3','2','1'];
+
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            const square = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
+            const piece = boardState[r][c];
+
+            let bgClass = isLight ? 'chess-sq-light' : 'chess-sq-dark';
+
+            // Last Move Yellow Highlight
+            if (lastMove && ((lastMove.fr === r && lastMove.fc === c) || (lastMove.tr === r && lastMove.tc === c))) {
+              bgClass += ' chess-sq-lastmove';
+            }
+
+            // Selected Square Highlight
+            if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+              bgClass += ' chess-sq-selected';
+            }
+
+            square.className = `relative flex items-center justify-center cursor-pointer ${bgClass}`;
+            square.onclick = () => onSquareClick(r, c);
+
+            // Algebraic Coordinates
+            if (c === 0) {
+              const rankLabel = document.createElement('span');
+              rankLabel.className = `absolute top-0.5 left-1 text-[9px] font-bold ${isLight ? 'text-[#769656]' : 'text-[#eeeed2]'}`;
+              rankLabel.innerText = ranks[r];
+              square.appendChild(rankLabel);
+            }
+            if (r === 7) {
+              const fileLabel = document.createElement('span');
+              fileLabel.className = `absolute bottom-0.5 right-1 text-[9px] font-bold ${isLight ? 'text-[#769656]' : 'text-[#eeeed2]'}`;
+              fileLabel.innerText = files[c];
+              square.appendChild(fileLabel);
+            }
+
+            // Piece Render
+            if (piece) {
+              const pieceEl = document.createElement('div');
+              pieceEl.className = 'w-10 h-10 sm:w-12 sm:h-12 tile-anim pointer-events-none';
+              pieceEl.innerHTML = CHESS_PIECES_SVG[piece] || '';
+              square.appendChild(pieceEl);
+            }
+
+            // Legal Move Dot Overlay
+            const isLegal = legalMoves.some(m => m.r === r && m.c === c);
+            if (isLegal) {
+              const dot = document.createElement('div');
+              if (piece) {
+                dot.className = 'absolute inset-1 rounded-full border-4 border-rose-500/80 pointer-events-none';
+              } else {
+                dot.className = 'w-3.5 h-3.5 rounded-full bg-black/25 pointer-events-none';
+              }
+              square.appendChild(dot);
+            }
+
+            boardEl.appendChild(square);
+          }
+        }
+      }
+
+      function onSquareClick(r, c) {
+        const piece = boardState[r][c];
+
+        if (selectedSquare) {
+          // Check if clicked square is legal move
+          const isLegal = legalMoves.some(m => m.r === r && m.c === c);
+          if (isLegal) {
+            makeMove(selectedSquare.r, selectedSquare.c, r, c);
+            selectedSquare = null;
+            legalMoves = [];
+            return;
+          }
+        }
+
+        // Select piece if turn matches
+        if (piece && piece[0] === turn) {
+          selectedSquare = { r, c };
+          legalMoves = calculateLegalMoves(r, c);
+          playSound('click');
+        } else {
+          selectedSquare = null;
+          legalMoves = [];
+        }
+        renderBoard();
+      }
+
+      function calculateLegalMoves(r, c) {
+        const piece = boardState[r][c];
+        if (!piece) return [];
+
+        let moves = [];
+        const type = piece[1];
+        const color = piece[0];
+        const dir = color === 'w' ? -1 : 1;
+
+        if (type === 'P') {
+          // Forward
+          if (r + dir >= 0 && r + dir < 8 && boardState[r + dir][c] === '') {
+            moves.push({ r: r + dir, c });
+            // Double step
+            if ((color === 'w' && r === 6) || (color === 'b' && r === 1)) {
+              if (boardState[r + 2 * dir][c] === '') moves.push({ r: r + 2 * dir, c });
+            }
+          }
+          // Captures
+          [-1, 1].forEach(dc => {
+            if (c + dc >= 0 && c + dc < 8 && r + dir >= 0 && r + dir < 8) {
+              const target = boardState[r + dir][c + dc];
+              if (target !== '' && target[0] !== color) moves.push({ r: r + dir, c: c + dc });
+            }
+          });
+        } else if (type === 'N') {
+          const offsets = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+          offsets.forEach(([dr, dc]) => {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+              if (boardState[nr][nc] === '' || boardState[nr][nc][0] !== color) moves.push({ r: nr, c: nc });
+            }
+          });
+        } else if (type === 'R' || type === 'B' || type === 'Q' || type === 'K') {
+          let dirs = [];
+          if (type === 'R' || type === 'Q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+          if (type === 'B' || type === 'Q') dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+          if (type === 'K') dirs.push([-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]);
+
+          dirs.forEach(([dr, dc]) => {
+            let nr = r + dr, nc = c + dc;
+            while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+              const target = boardState[nr][nc];
+              if (target === '') {
+                moves.push({ r: nr, c: nc });
+                if (type === 'K') break;
+              } else {
+                if (target[0] !== color) moves.push({ r: nr, c: nc });
+                break;
+              }
+              nr += dr; nc += dc;
+            }
+          });
+        }
+
+        return moves;
+      }
+
+      function makeMove(fr, fc, tr, tc) {
+        const piece = boardState[fr][fc];
+        const target = boardState[tr][tc];
+
+        boardState[tr][tc] = piece;
+        boardState[fr][fc] = '';
+
+        lastMove = { fr, fc, tr, tc };
+
+        // Pawn Promotion Check
+        if (piece[1] === 'P' && (tr === 0 || tr === 7)) {
+          pendingPromotion = { r: tr, c: tc, color: piece[0] };
+          document.getElementById('chess-promo-modal').classList.remove('hidden');
+          return;
+        }
+
+        if (target !== '') playSound('capture');
+        else playSound('move');
+
+        recordNotation(piece, fr, fc, tr, tc, target !== '');
+
+        turn = turn === 'w' ? 'b' : 'w';
+        updateStatus();
+        renderBoard();
+
+        if (gameMode === 'ai' && turn === 'b') {
+          setTimeout(aiChessMove, 400);
+        }
+      }
+
+      window.promotePawn = function(chosenType) {
+        if (!pendingPromotion) return;
+        boardState[pendingPromotion.r][pendingPromotion.c] = pendingPromotion.color + chosenType;
+        document.getElementById('chess-promo-modal').classList.add('hidden');
+        pendingPromotion = null;
+        turn = turn === 'w' ? 'b' : 'w';
+        updateStatus();
+        renderBoard();
+      };
+
+      function recordNotation(piece, fr, fc, tr, tc, isCapture) {
+        const files = ['a','b','c','d','e','f','g','h'];
+        const pName = piece[1] === 'P' ? '' : piece[1];
+        const moveStr = `${pName}${isCapture ? 'x' : ''}${files[tc]}${8 - tr}`;
+        moveHistory.push(moveStr);
+
+        const logEl = document.getElementById('chess-notation-log');
+        if (moveHistory.length === 1) logEl.innerHTML = '';
+
+        let html = '';
+        for (let i = 0; i < moveHistory.length; i += 2) {
+          html += `<div class="flex justify-between py-0.5"><span class="text-slate-500">${(i/2)+1}.</span><span class="font-bold text-cyan-300">${moveHistory[i]}</span><span class="text-slate-400">${moveHistory[i+1] || ''}</span></div>`;
+        }
+        logEl.innerHTML = html;
+      }
+
+      function aiChessMove() {
+        let allMoves = [];
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            if (boardState[r][c] && boardState[r][c][0] === 'b') {
+              const moves = calculateLegalMoves(r, c);
+              moves.forEach(m => allMoves.push({ fr: r, fc: c, tr: m.r, tc: m.c }));
+            }
+          }
+        }
+
+        if (allMoves.length > 0) {
+          // Prioritize captures
+          const captures = allMoves.filter(m => boardState[m.tr][m.tc] !== '');
+          const choice = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
+          makeMove(choice.fr, choice.fc, choice.tr, choice.tc);
+        }
+      }
+
+      function updateStatus() {
+        const pill = document.getElementById('chess-status-pill');
+        if (pill) {
+          pill.innerText = turn === 'w' ? 'WHITE TURN' : 'BLACK TURN';
+          pill.className = turn === 'w' ? "text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40" : "text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full border border-rose-500/40";
+        }
+      }
+
+      window.resetChessGame = function() {
+        boardState = [
+          ['bR','bN','bB','bQ','bK','bB','bN','bR'],
+          ['bP','bP','bP','bP','bP','bP','bP','bP'],
+          ['','','','','','','',''],
+          ['','','','','','','',''],
+          ['','','','','','','',''],
+          ['','','','','','','',''],
+          ['wP','wP','wP','wP','wP','wP','wP','wP'],
+          ['wR','wN','wB','wQ','wK','wB','wN','wR']
+        ];
+        turn = 'w';
+        selectedSquare = null;
+        legalMoves = [];
+        lastMove = null;
+        moveHistory = [];
+        document.getElementById('chess-notation-log').innerHTML = '<div class="text-slate-600 text-center py-4">O\'yin boshlandi!</div>';
+        updateStatus();
+        renderBoard();
+      };
+
+      renderBoard();
+    }
+
+    /* ================= GAME 2: TIC-TAC-TOE NEON ================= */
+    function initTicTacToe(container) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-4 w-full max-w-md mx-auto space-y-4">
+          <div class="flex items-center justify-between w-full bg-slate-900/90 p-2.5 rounded-2xl border border-fuchsia-500/30 text-xs font-mono">
+            <div class="flex gap-2">
+              <button id="ttt-mode-ai" onclick="setTTTMode('ai')" class="px-3 py-1 rounded-lg font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50">VS AI</button>
+              <button id="ttt-mode-pvp" onclick="setTTTMode('pvp')" class="px-3 py-1 rounded-lg font-bold text-slate-400 bg-slate-800">2 Player</button>
+            </div>
+            <div class="text-slate-300">Turn: <span id="ttt-turn" class="font-bold text-cyan-400">X (You)</span></div>
+          </div>
+
+          <div id="ttt-board" class="grid grid-cols-3 gap-3 w-72 h-72 sm:w-80 sm:h-80 bg-slate-900/80 p-3 rounded-2xl border-2 border-fuchsia-500/40 shadow-[0_0_25px_rgba(217,70,239,0.2)]">
+          </div>
+
+          <button onclick="resetTTT()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 font-orbitron font-bold text-xs transition">
+            🔄 YANGI O'YIN
+          </button>
+        </div>
+      `;
+
+      let board = Array(9).fill('');
+      let gameActive = true;
+      let currentPlayer = 'X';
+      let mode = 'ai';
+
+      const winConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+      window.setTTTMode = function(m) {
+        mode = m;
+        document.getElementById('ttt-mode-ai').className = mode === 'ai' ? "px-3 py-1 rounded-lg font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50" : "px-3 py-1 rounded-lg font-bold text-slate-400 bg-slate-800";
+        document.getElementById('ttt-mode-pvp').className = mode === 'pvp' ? "px-3 py-1 rounded-lg font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/50" : "px-3 py-1 rounded-lg font-bold text-slate-400 bg-slate-800";
+        resetTTT();
+      };
+
+      function renderBoard() {
+        const boardEl = document.getElementById('ttt-board');
+        if (!boardEl) return;
+        boardEl.innerHTML = '';
+
+        board.forEach((val, idx) => {
+          const cell = document.createElement('div');
+          cell.className = `rounded-xl flex items-center justify-center font-orbitron font-black text-3xl sm:text-4xl cursor-pointer transition-all duration-200 border ${
+            val === '' ? 'bg-slate-950/60 border-slate-800 hover:border-fuchsia-500/50 hover:bg-slate-900' :
+            val === 'X' ? 'bg-cyan-950/60 text-cyan-400 border-cyan-500/60 shadow-[0_0_15px_rgba(0,243,255,0.3)] tile-anim' :
+            'bg-fuchsia-950/60 text-fuchsia-400 border-fuchsia-500/60 shadow-[0_0_15px_rgba(217,70,239,0.3)] tile-anim'
+          }`;
+          cell.innerText = val;
+          cell.onclick = () => handleCellClick(idx);
+          boardEl.appendChild(cell);
+        });
+      }
+
+      function handleCellClick(index) {
+        if (board[index] !== '' || !gameActive) return;
+        board[index] = currentPlayer;
+        playSound('move');
+        checkResult();
+
+        if (gameActive && mode === 'ai' && currentPlayer === 'O') {
+          setTimeout(aiMove, 300);
+        }
+      }
+
+      function aiMove() {
+        if (!gameActive) return;
+        let empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+        if (empty.length > 0) {
+          let choice = empty[Math.floor(Math.random() * empty.length)];
+          board[choice] = 'O';
+          playSound('move');
+          checkResult();
+        }
+      }
+
+      function checkResult() {
+        let won = false;
+        for (let cond of winConditions) {
+          if (board[cond[0]] && board[cond[0]] === board[cond[1]] && board[cond[0]] === board[cond[2]]) {
+            won = true;
+            break;
+          }
+        }
+        if (won) {
+          playSound('win');
+          gameActive = false;
+          document.getElementById('ttt-turn').innerText = `${currentPlayer} WIN!`;
+          return;
+        }
+        if (!board.includes('')) {
+          playSound('gameover');
+          gameActive = false;
+          document.getElementById('ttt-turn').innerText = "DURANG!";
+          return;
+        }
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        document.getElementById('ttt-turn').innerText = `${currentPlayer} Turn`;
+        renderBoard();
+      }
+
+      window.resetTTT = function() {
+        board = Array(9).fill('');
+        gameActive = true;
+        currentPlayer = 'X';
+        document.getElementById('ttt-turn').innerText = 'X (You)';
+        renderBoard();
+      };
+
+      renderBoard();
+    }
+
+    /* ================= GAME 3: BATTLE SURVIVAL ================= */
+    function initBattleSurvival(container) {
+      container.innerHTML = `
+        <div class="relative w-full h-[500px] flex flex-col items-center justify-center bg-slate-950">
+          <canvas id="battle-canvas" class="w-full h-full border border-slate-800"></canvas>
+        </div>
+      `;
+      const canvas = document.getElementById('battle-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = container.clientWidth;
+      canvas.height = 500;
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00f3ff';
+      ctx.font = '16px Orbitron';
+      ctx.fillText('Battle Survival Arena Active', 20, 40);
+    }
+
+    /* ================= GAME 4: NEON 2048 ================= */
+    function initNeon2048(container) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-6 space-y-4">
+          <div id="grid-2048" class="w-72 h-72 bg-slate-900 border-2 border-cyan-500/40 rounded-2xl p-2 grid grid-cols-4 gap-2"></div>
+        </div>
+      `;
+      const board = document.getElementById('grid-2048');
+      for(let i=0; i<16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'bg-slate-950 rounded-xl flex items-center justify-center font-bold text-cyan-400';
+        cell.innerText = i === 0 ? '2' : '';
+        board.appendChild(cell);
+      }
+    }
+
+    /* ================= GAME 5: SNAKE 3310 ================= */
+    function initSnake3310(container) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-4">
+          <canvas id="snake-canvas" width="280" height="280" class="bg-slate-950 border-2 border-indigo-500/40 rounded-2xl"></canvas>
+        </div>
+      `;
+      const ctx = document.getElementById('snake-canvas').getContext('2d');
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0,0,280,280);
+      ctx.fillStyle = '#818cf8';
+      ctx.fillRect(40,40,20,20);
+    }
+
+    /* ================= GAME 6: CUBE CRAFT ================= */
+    function initCubeCraft(container) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center p-6">
+          <div class="w-72 h-64 bg-slate-900 border border-teal-500/40 rounded-2xl flex items-center justify-center text-teal-400 font-orbitron">
+            🧱 Cube Craft Voxel World
+          </div>
+        </div>
+      `;
+    }
+
+    /* ================= GAME 7: BILLIARDS ================= */
+    function initBilliards(container) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center p-6">
+          <div class="w-80 h-44 bg-slate-900 border-4 border-cyan-600 rounded-3xl flex items-center justify-center text-cyan-400 font-orbitron">
+            🎱 Pool Table 8-Ball
+          </div>
+        </div>
+      `;
+    }
+
+    /* ================= GAME 8: NIGHTMARE MAZE ================= */
+    function initNightmareMaze(container) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center p-6">
+          <div class="w-72 h-64 bg-slate-950 border border-purple-500/40 rounded-2xl flex items-center justify-center text-purple-400 font-orbitron">
+            👻 Horror Maze Arena
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
